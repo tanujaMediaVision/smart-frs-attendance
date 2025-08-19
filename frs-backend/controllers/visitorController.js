@@ -1,6 +1,6 @@
 import Visitor from "../models/Visitor.js";
 
-// Create
+// Create visitors
 export const createVisitor = async (req, res) => {
   try {
     const visitor = new Visitor(req.body);

@@ -33,7 +33,7 @@ import Home from '../src/pages/Home'
 // import Categories from '../src/pages/Categories'
 // import Customers from '../src/pages/Customers'
 // import Reports from '../src/pages/Reports'
-// import Settings from '../src/pages/Settings'
+// import Settings from '../src/pages/Settings'  
 
 function App() {
   const [openSidebarToggle, setOpenSidebarToggle] = useState(false)

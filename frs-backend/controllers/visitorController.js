@@ -11,7 +11,7 @@ export const createVisitor = async (req, res) => {
   }
 };
 
-// Read All
+// Read All visitor
 export const getVisitors = async (req, res) => {
   try {
     const visitors = await Visitor.find();

@@ -35,7 +35,7 @@ function Home() {
     const getAllenquiry = () => {
         axios.get(`${import.meta.env.VITE_API_URL}/visitors/list`)
             .then((res) => {
-                console.log(res.data);
+                // console.log(res.data);
                 setEnquiryOlist(res.data)
             })
             .catch((err) => { console.log(err); })
@@ -178,28 +178,27 @@ function Home() {
                         </tr>
                     </thead>
                     <tbody>
-                        {enquiryOlist &&
-                            enquiryOlist.length >= 1 ? (enquiryOlist.map((item, index) => {
-                                return (
-                                    <tr key={index} >
-                                        <td>{index + 1}</td>
-                                        <td>{item.first_name}</td>
-                                        <td>{item.last_name}</td>
-                                        <td>{item.phone_number}</td>
-                                        <td>{item.gender}</td>
-                                        <td>{item.status}</td>
-                                        <td>{item.notes}</td>
-                                        {/* <td>
+                        {Array.isArray(enquiryOlist) && enquiryOlist.length > 0 ? (
+                            enquiryOlist.map((item, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>{item.first_name}</td>
+                                    <td>{item.last_name}</td>
+                                    <td>{item.phone_number}</td>
+                                    <td>{item.gender}</td>
+                                    <td>{item.status}</td>
+                                    <td>{item.notes}</td>
+                                    {/* <td>
                                             <button className="btn btn-danger btn-sm">Delete</button>
                                             <button className="btn btn-warning btn-sm ms-2">Edit</button>
                                         </td> */}
-                                    </tr>
-                                )
-                            })) :
+                                </tr>
+                            ))
+                        ) : (
                             <tr>
                                 <td colSpan={8} className="text-center">No Data Found</td>
                             </tr>
-                        }
+                        )}
                     </tbody>
                 </Table>
             </div>

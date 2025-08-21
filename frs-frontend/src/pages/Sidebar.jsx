@@ -1,96 +1,51 @@
-// import React from 'react'
-// import { BsCart3, BsGrid1X2Fill, BsFillArchiveFill, BsFillGrid3X3GapFill, BsPeopleFill, BsListCheck, BsMenuButtonWideFill, BsFillGearFill } from 'react-icons/bs'
-
-// function Sidebar({ openSidebarToggle, OpenSidebar }) {
-//     return (
-//         <aside id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
-//             <div className='sidebar-title'>
-//                 <div className='sidebar-brand'>
-//                     <BsCart3 className='icon_header' /> SHOP
-//                 </div>
-//                 <span className='icon close_icon' onClick={OpenSidebar}>X</span>
-//             </div>
-
-//             <ul className='sidebar-list'>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsGrid1X2Fill className='icon' /> Dashboard
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsFillArchiveFill className='icon' /> Products
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsFillGrid3X3GapFill className='icon' /> Categories
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsPeopleFill className='icon' /> Customers
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsListCheck className='icon' /> Inventory
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsMenuButtonWideFill className='icon' /> Reports
-//                     </a>
-//                 </li>
-//                 <li className='sidebar-list-item'>
-//                     <a href="">
-//                         <BsFillGearFill className='icon' /> Setting
-//                     </a>
-//                 </li>
-//             </ul>
-//         </aside>
-//     )
-// }
-
-// export default Sidebar
-
-
-import React from 'react'
-import { 
-  BsCart3, BsGrid1X2Fill, BsFillArchiveFill, 
-  BsFillGrid3X3GapFill, BsPeopleFill, 
-  BsListCheck, BsMenuButtonWideFill, BsFillGearFill 
+import {
+  BsCart3, BsGrid1X2Fill, BsFillArchiveFill,
+  BsFillGrid3X3GapFill, BsPeopleFill,
+  BsListCheck, BsMenuButtonWideFill, BsFillGearFill
 } from 'react-icons/bs'
 
-function Sidebar({ openSidebarToggle, OpenSidebar, setActivePage }) {
+function Sidebar({ openSidebarToggle, OpenSidebar, setActivePage, activePage }) {
   return (
     <aside id="sidebar" className={openSidebarToggle ? "sidebar-responsive" : ""}>
       <div className='sidebar-title'>
-        <div className='sidebar-brand'>
-          <BsCart3 className='icon_header' /> SHOP
+        <div className='sidebar-brand'> 🛡️ SecureGate Pro
+          {/* <BsCart3 className='icon_header' /> SHOP */}
         </div>
         <span className='icon close_icon' onClick={OpenSidebar}>X</span>
       </div>
 
       <ul className='sidebar-list'>
-        <li className='sidebar-list-item' onClick={() => setActivePage("dashboard")}>
-          <BsGrid1X2Fill className='icon' /> Visitor
+        <p className='sidebar-list-p'>Main</p>
+        <li className={`sidebar-list-item ${activePage === "dashboard" ? "active" : ""}`} onClick={() => setActivePage("dashboard")}>
+          <BsGrid1X2Fill className='icon' /> Dashboard
         </li>
-        {/* <li className='sidebar-list-item' onClick={() => setActivePage("products")}>
-          <BsFillArchiveFill className='icon' /> Products
+        <li className={`sidebar-list-item ${activePage === "visitors" ? "active" : ""}`} onClick={() => setActivePage("visitors")}>
+          <BsFillArchiveFill className='icon' /> Visitors
         </li>
-        <li className='sidebar-list-item' onClick={() => setActivePage("categories")}>
-          <BsFillGrid3X3GapFill className='icon' /> Categories
+        <li className={`sidebar-list-item ${activePage === "employees" ? "active" : ""}`} onClick={() => setActivePage("employees")}>
+          <BsFillGrid3X3GapFill className='icon' /> Employees
         </li>
-        <li className='sidebar-list-item' onClick={() => setActivePage("customers")}>
-          <BsPeopleFill className='icon' /> Customers
+        <li className={`sidebar-list-item ${activePage === "vehicles" ? "active" : ""}`} onClick={() => setActivePage("vehicles")}>
+          <BsPeopleFill className='icon' /> Vahicles
         </li>
-        <li className='sidebar-list-item' onClick={() => setActivePage("reports")}>
-          <BsMenuButtonWideFill className='icon' /> Reports
+        <p className='sidebar-list-p'>Security</p>
+        <li className={`sidebar-list-item ${activePage === "liveGates" ? "active" : ""}`} onClick={() => setActivePage("liveGates")}>
+          <BsMenuButtonWideFill className='icon' /> Live Gates
         </li>
-        <li className='sidebar-list-item' onClick={() => setActivePage("settings")}>
-          <BsFillGearFill className='icon' /> Setting
-        </li> */}
+        <li className={`sidebar-list-item ${activePage === "attendance" ? "active" : ""}`} onClick={() => setActivePage("attendance")}>
+          <BsCart3 className='icon' /> Attendance
+        </li>
+        <p className='sidebar-list-p'>Reports</p>
+        <li className={`sidebar-list-item ${activePage === "analytics" ? "active" : ""}`} onClick={() => setActivePage("analytics")}>
+          <BsListCheck className='icon' /> Analytics
+        </li>
+        <li className={`sidebar-list-item ${activePage === "export" ? "active" : ""}`} onClick={() => setActivePage("export")}>
+          <BsMenuButtonWideFill className='icon' /> Export
+        </li>
+        <p className='sidebar-list-p'>Settings</p>
+        <li className={`sidebar-list-item ${activePage === "settings" ? "active" : ""}`} onClick={() => setActivePage("settings")}>
+          <BsFillGearFill className='icon' /> Settings
+        </li>
       </ul>
     </aside>
   )

@@ -8,7 +8,7 @@ import Row from 'react-bootstrap/Row';
 import { FloatingLabel } from 'react-bootstrap';
 import Dropdown from 'react-bootstrap/Dropdown';
 import axios from 'axios';
-function Home() {
+function Visitors() {
     const [show, setShow] = useState(false);
     const [validated, setValidated] = useState(false);
     let [enquiryOlist, setEnquiryOlist] = useState([])
@@ -68,7 +68,7 @@ function Home() {
         <main className='main-container'>
             <div className='main-title mb-5'>
                 <h3>Visitor</h3>
-                <Button variant="primary" onClick={handleShow}>Add +</Button>
+                <Button variant="dark" onClick={handleShow}>Add +</Button>
             </div>
             <Modal show={show} onHide={handleClose} animation={false}>
                 <Modal.Header closeButton>
@@ -159,12 +159,12 @@ function Home() {
                                 onChange={handleChange}
                             />
                         </FloatingLabel>
-                        <Button variant="primary" type="submit">Submit</Button>
+                        <Button className="float-end" variant="dark" type="submit">Submit</Button>
                     </Form>
                 </Modal.Body>
             </Modal>
             <div>
-                <Table striped bordered hover>
+                <Table striped bordered hover responsive>
                     <thead>
                         <tr>
                             <th>#</th>
@@ -206,4 +206,4 @@ function Home() {
     )
 }
 
-export default Home
+export default Visitors

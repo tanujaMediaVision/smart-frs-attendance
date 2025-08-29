@@ -43,17 +43,15 @@ function Visitors() {
     useEffect(() => {
         getAllenquiry()
     }, [])
-
+    
     const handleSubmit = (event) => {
         event.preventDefault();
         const form = event.currentTarget;
-
         if (form.checkValidity() === false) {
             event.stopPropagation();
             setValidated(true);
             return;
         }
-
         axios.post(`${import.meta.env.VITE_API_URL}/visitors/create`, formData)
             .then((res) => {
                 console.log("Form submitted:", res.data);

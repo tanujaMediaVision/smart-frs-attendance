@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Form, Button, Row, Col } from "react-bootstrap";
 import { FiClock } from "react-icons/fi";
+import axios from "axios";
 
 function Otp({ phoneNumber, onVerify }) {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [timer, setTimer] = useState(30);
-
+  const inputRefs = useRef([]); // store refs for all inputs
   // Countdown timer
   useEffect(() => {
     if (timer > 0) {
@@ -17,16 +18,29 @@ function Otp({ phoneNumber, onVerify }) {
   }, [timer]);
 
   // Handle OTP input
-  const handleChange = (element, index) => {
-    if (isNaN(element.value)) return false;
+  const handleChange = (value, index) => {
+    if (!/^\d*$/.test(value)) return; // only numbers
 
-    let newOtp = [...otp];
-    newOtp[index] = element.value;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1); // keep only last digit
     setOtp(newOtp);
 
-    // Auto focus next input
-    if (element.nextSibling && element.value !== "") {
-      element.nextSibling.focus();
+    // Focus next field automatically
+    if (value && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+  // Handle paste full OTP
+  const handlePaste = (e) => {
+    const pasteData = e.clipboardData.getData("Text").trim();
+    if (/^\d{6}$/.test(pasteData)) {
+      setOtp(pasteData.split(""));
+      inputRefs.current[5].focus();
     }
   };
 
@@ -34,20 +48,28 @@ function Otp({ phoneNumber, onVerify }) {
     e.preventDefault();
     const enteredOtp = otp.join("");
     if (enteredOtp.length === 6) {
-      onVerify(enteredOtp);
+      // 🔹 Verify OTP API call
+      axios.post(`${import.meta.env.VITE_API_URL}/auth/verify-otp `, { mobile_number: phoneNumber, otp: enteredOtp })
+        .then((res) => {
+          if (res.data && res.data.token) {
+            onVerify(res.data.token); // pass token back to App
+          } else {
+            alert(res.data.message || "Invalid OTP");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("Something went wrong");
+        });
     } else {
       alert("Enter 6-digit OTP");
     }
   };
-
   return (
     <div className="otp-container">
       <div className="otp-box">
         <h3>Enter OTP</h3>
-        <p>
-          We've sent a 6-digit code to <strong>+91 {phoneNumber}</strong>
-        </p>
-
+        <p>We've sent a 6-digit code to <strong>+91 {phoneNumber}</strong></p>
         <Form onSubmit={handleSubmit}>
           <Form.Group>
             <Form.Label>6-Digit OTP</Form.Label>
@@ -58,15 +80,16 @@ function Otp({ phoneNumber, onVerify }) {
                     type="text"
                     maxLength="1"
                     value={data}
-                    onChange={(e) => handleChange(e.target, index)}
-                    onFocus={(e) => e.target.select()}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    onChange={(e) => handleChange(e.target.value, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    onPaste={handlePaste}
                     className="otp-input"
                   />
                 </Col>
               ))}
             </Row>
           </Form.Group>
-
           <div className="resend-section">
             <p>Didn't receive the code?</p>
             {timer > 0 ? (
@@ -74,23 +97,13 @@ function Otp({ phoneNumber, onVerify }) {
                 <FiClock /> Resend OTP in {timer}s
               </span>
             ) : (
-              <Button
-                variant="link"
-                className="p-0 text-decoration-none text-secondary"
-                onClick={() => setTimer(30)}
-              >
-                Resend OTP
-              </Button>
+              <Button variant="link" className="p-0 text-decoration-none text-secondary" onClick={() => setTimer(30)} >Resend OTP</Button>
             )}
           </div>
-
-          <Button type="submit" className="w-100 mt-3" variant="dark">
-            Login
-          </Button>
+          <Button type="submit" className="w-100 mt-3" variant="dark">Login</Button>
         </Form>
       </div>
     </div>
   );
 }
-
 export default Otp;

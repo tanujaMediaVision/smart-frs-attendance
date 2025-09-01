@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import { FaUser, FaIdCard, FaCar, FaShieldAlt, FaClipboardCheck, FaSignature, FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
-const AddVisitors = ({ onSuccess }) => {
+const AddVisitors = () => {
     const [isEmployee, setIsEmployee] = useState("No");
     const [vehicleUsage, setVehicleUsage] = useState("No");
     const [driverAccompanying, setDriverAccompanying] = useState("No");
@@ -53,13 +53,13 @@ const AddVisitors = ({ onSuccess }) => {
             vehicleUsage,
             driverAccompanying,
             carryingItems,
-            items:applianceFields,
+            items: applianceFields,
         };
         axios.post(`${import.meta.env.VITE_API_URL}/visitors/create`, payload)
             .then((res) => {
                 console.error(res);
                 alert("Visitor added successfully!");
-                if (onSuccess) onSuccess(); // refresh table after add
+                // if (onSuccess) onSuccess(); // refresh table after add
             })
             .catch((err) => {
                 console.error(err);

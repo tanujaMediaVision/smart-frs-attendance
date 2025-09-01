@@ -38,6 +38,12 @@ body {
   display: none;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Sidebar  */
 .icon_header {
   vertical-align: middle;

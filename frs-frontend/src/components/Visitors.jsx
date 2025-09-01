@@ -1,205 +1,270 @@
-import { useEffect, useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import Table from 'react-bootstrap/Table';
-import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
-import Row from 'react-bootstrap/Row';
-import { FloatingLabel } from 'react-bootstrap';
-import Dropdown from 'react-bootstrap/Dropdown';
-import axios from 'axios';
-function Visitors() {
+import { useEffect, useState } from "react";
+import { Button, Modal, Table, Col, Form, Row, FloatingLabel, Dropdown, Card, Pagination, InputGroup } from "react-bootstrap";
+import { FaEye, FaEdit, FaTrash, FaThList, FaThLarge, } from "react-icons/fa";
+import axios from "axios";
+import AddVisitors from "./AddVisitors";
+import CreateVisitors from "./CreateVisitors";
+const Visitors = () => {
     const [show, setShow] = useState(false);
-    const [validated, setValidated] = useState(false);
-    let [enquiryOlist, setEnquiryOlist] = useState([])
-    const [formData, setFormData] = useState({
-        first_name: "",
-        last_name: "",
-        phone_number: "",
-        gender: "",
-        status: "",
-        notes: ""
-    });
+    const [showE, setShowE] = useState(false);
+    const [view, setView] = useState("table"); // "table" | "card"
+    const [enquiryOlist, setEnquiryOlist] = useState([]);
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-
-    const handleStatusSelect = (status) => {
-        setFormData({ ...formData, status });
-    };
+    const handleCloseE = () => setShowE(false);
+    const handleShowE = () => setShowE(true);
 
     const getAllenquiry = () => {
-        axios.get(`${import.meta.env.VITE_API_URL}/visitors/list`)
+        axios
+            .get(`${import.meta.env.VITE_API_URL}/visitors/list`)
             .then((res) => {
-                // console.log(res.data);
-                setEnquiryOlist(res.data)
+                setEnquiryOlist(res.data);
             })
-            .catch((err) => { console.log(err); })
-    }
-    useEffect(() => {
-        getAllenquiry()
-    }, [])
-    
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        if (form.checkValidity() === false) {
-            event.stopPropagation();
-            setValidated(true);
-            return;
-        }
-        axios.post(`${import.meta.env.VITE_API_URL}/visitors/create`, formData)
-            .then((res) => {
-                console.log("Form submitted:", res.data);
-                getAllenquiry(); // refresh table
-                handleClose(); // close modal
-                setFormData({ first_name: "", last_name: "", phone_number: "", gender: "", status: "", notes: "" }); // reset form
-                setValidated(false);
-            })
-            .catch((err) => { console.log(err); });
+            .catch((err) => {
+                console.log(err);
+            });
     };
+
+    useEffect(() => {
+        getAllenquiry();
+    }, []);
+
+    const filteredVisitors = enquiryOlist.filter((item) => {
+        const matchesSearch =
+            item.visitor_name?.toLowerCase().includes(search.toLowerCase()) ||
+            item.last_name?.toLowerCase().includes(search.toLowerCase()) ||
+            item.phone_number?.includes(search);
+        const matchesStatus = statusFilter
+            ? item.status === statusFilter
+            : true;
+        return matchesSearch && matchesStatus;
+    });
     return (
-        <main className='main-container'>
-            <div className='main-title mb-5'>
-                <h3>Visitor</h3>
-                <Button variant="dark" onClick={handleShow}>Add +</Button>
+        <main className="main-container">
+            {/* Header */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h3>Visitor’s Management</h3>
+                <Button variant="dark" onClick={handleShow}>+ Create Visitor Pass</Button>
             </div>
-            <Modal show={show} onHide={handleClose} animation={false}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add Visitor</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form noValidate validated={validated} onSubmit={handleSubmit}>
-                        <Row className="mb-3">
-                            <Form.Group as={Col} md="6" >
-                                <Form.Label>First name</Form.Label>
-                                <Form.Control
-                                    required
-                                    type="text"
-                                    placeholder="First name"
-                                    name="first_name"
-                                    value={formData.first_name}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                            <Form.Group as={Col} md="6">
-                                <Form.Label>Last name</Form.Label>
-                                <Form.Control
-                                    required
-                                    type="text"
-                                    placeholder="Last name"
-                                    name="last_name"
-                                    value={formData.last_name}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                        </Row>
-                        <Row className="mb-3">
-                            <Form.Group as={Col} md="6">
-                                <Form.Label>Phone No.</Form.Label>
-                                <Form.Control type="text" placeholder="Number" required name="phone_number"
-                                    value={formData.phone_number}
-                                    onChange={handleChange} />
-                            </Form.Group>
-                            <Form.Group as={Col} md="6">
-                                <Form.Label>Status</Form.Label>
-                                <Dropdown onSelect={handleStatusSelect}>
-                                    <Dropdown.Toggle variant="light" style={{ width: "100%", textAlign: 'start' }}>
-                                        {formData.status || "Select Status"}
-                                    </Dropdown.Toggle>
-                                    <Dropdown.Menu>
-                                        <Dropdown.Item eventKey="Approved">Approved</Dropdown.Item>
-                                        <Dropdown.Item eventKey="Rejected">Rejected</Dropdown.Item>
-                                        <Dropdown.Item eventKey="Pending">Pending</Dropdown.Item>
-                                        <Dropdown.Item eventKey="Cancelled">Cancelled</Dropdown.Item>
-                                    </Dropdown.Menu>
-                                </Dropdown>
-                            </Form.Group>
-                        </Row>
-                        <Row className="mb-1">
-                            <Form.Group className="mb-3" as={Col} md="3">
-                                <Form.Check
-                                    required
-                                    label="Male"
-                                    type='radio'
-                                    name="gender"
-                                    value="Male"
-                                    checked={formData.gender === "Male"}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                            <Form.Group className="mb-3" as={Col} md="3">
-                                <Form.Check
-                                    required
-                                    label="Female"
-                                    type='radio'
-                                    name="gender"
-                                    value="Female"
-                                    checked={formData.gender === "Female"}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                        </Row>
-                        <FloatingLabel
-                            controlId="floatingTextarea"
-                            label="Note"
-                            className="mb-3"
-                        >
-                            <Form.Control
-                                as="textarea"
-                                placeholder="Leave a comment here"
-                                name="notes"
-                                value={formData.notes}
-                                onChange={handleChange}
-                            />
-                        </FloatingLabel>
-                        <Button className="float-end" variant="dark" type="submit">Submit</Button>
-                    </Form>
-                </Modal.Body>
-            </Modal>
-            <div>
-                <Table striped bordered hover responsive>
+            {/* Filters */}
+            <Row className="mb-3">
+                <Col md={4}>
+                    <InputGroup>
+                        <Form.Control
+                            placeholder="Search by name or phone..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </InputGroup>
+                </Col>
+                <Col md={2}>
+                    <Form.Select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </Form.Select>
+                </Col>
+                <Col md={2}>
+                    <Form.Control type="date" />
+                </Col>
+                <Col md={2}>
+                    <Form.Control type="date" />
+                </Col>
+                <Col md={2}>
+                    <Button variant="light" className="w-100">
+                        Filter
+                    </Button>
+                </Col>
+            </Row>
+            {/* View Toggle */}
+            <div className="mb-2">
+                <Button
+                    size="sm"
+                    variant={view === "table" ? "dark" : "light"}
+                    className="me-2"
+                    onClick={() => setView("table")}
+                >
+                    <FaThList className="me-1" /> Table View
+                </Button>
+                <Button
+                    size="sm"
+                    variant={view === "card" ? "dark" : "light"}
+                    onClick={() => setView("card")}
+                >
+                    <FaThLarge className="me-1" /> Card View
+                </Button>
+            </div>
+            {/* Table View */}
+            {view === "table" && (
+                <Table hover responsive>
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Phone no</th>
-                            <th>gender</th>
+                            <th>Visitor Name</th>
+                            <th>Purpose of Visit</th>
+                            <th>Date & Time</th>
                             <th>Status</th>
-                            <th>Message</th>
-                            {/* <th>Action</th> */}
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.isArray(enquiryOlist) && enquiryOlist.length > 0 ? (
-                            enquiryOlist.map((item, index) => (
+                        {filteredVisitors.length > 0 ? (
+                            filteredVisitors.map((item, index) => (
                                 <tr key={index}>
-                                    <td>{index + 1}</td>
-                                    <td>{item.first_name}</td>
-                                    <td>{item.last_name}</td>
-                                    <td>{item.phone_number}</td>
-                                    <td>{item.gender}</td>
-                                    <td>{item.status}</td>
-                                    <td>{item.notes}</td>
-                                    {/* <td>
-                                            <button className="btn btn-danger btn-sm">Delete</button>
-                                            <button className="btn btn-warning btn-sm ms-2">Edit</button>
-                                        </td> */}
+                                    <td>
+                                        <div className="d-flex align-items-center">
+                                            <img
+                                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.visitor_name}`}
+                                                alt="avatar"
+                                                width="40"
+                                                height="40"
+                                                className="me-2 rounded-circle"
+                                            />
+                                            <div>
+                                                <div>
+                                                    {item.visitor_name || "—"}
+                                                </div>
+                                                <small className="text-muted">
+                                                    {item.phone_no || "—"}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{item.purpose_of_visit || "—"}</td>
+                                    <td>{item.createdAt
+                                        ? new Date(item.createdAt).toLocaleString("en-US", {
+                                            month: "numeric",
+                                            day: "numeric",
+                                            year: "numeric",
+                                            hour: "numeric",
+                                            minute: "numeric",
+                                            hour12: true
+                                        })
+                                        : "—"}</td>
+                                    <td>
+                                        <span
+                                            className={`badge ${item.visitor_status === "approved"
+                                                ? "bg-success"
+                                                : item.visitor_status === "rejected"
+                                                    ? "bg-danger"
+                                                    : item.visitor_status === "pending"
+                                                        ? "bg-warning text-dark"
+                                                        : "bg-secondary"
+                                                }`}
+                                        >
+                                            {item.visitor_status
+                                                ? item.visitor_status.charAt(0).toUpperCase() + item.visitor_status.slice(1)
+                                                : ""}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <FaEye className="me-2 text-primary" role="button" />
+                                        <FaEdit className="me-2 text-warning" role="button" onClick={handleShowE} />
+                                        <FaTrash className="text-danger" role="button" />
+                                    </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={8} className="text-center">No Data Found</td>
+                                <td colSpan={5} className="text-center">
+                                    No Data Found
+                                </td>
                             </tr>
                         )}
                     </tbody>
                 </Table>
+            )}
+            {/* Card View */}
+            {view === "card" && (
+                <Row>
+                    {filteredVisitors.length > 0 ? (
+                        filteredVisitors.map((item, index) => (
+                            <Col md={4} key={index} className="mb-3">
+                                <Card className="shadow-sm">
+                                    <Card.Body>
+                                        <div className="d-flex align-items-center mb-2">
+                                            <img
+                                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.visitor_name}`}
+                                                alt="avatar"
+                                                width="50"
+                                                height="50"
+                                                className="me-2 rounded-circle"
+                                            />
+                                            <div>
+                                                <h6>
+                                                    {item.visitor_name}
+                                                </h6>
+                                                <small className="text-muted">
+                                                    {item.phone_no}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <p className="mb-1">
+                                            <strong>Purpose:</strong> {item.purpose_of_visit || "—"}
+                                        </p>
+                                        <p className="mb-1">
+                                            <strong>Date:</strong> {new Date().toLocaleDateString()}
+                                        </p>
+                                        <p>
+                                            <span
+                                                className={`badge ${item.visitor_status === "approved"
+                                                    ? "bg-success"
+                                                    : item.visitor_status === "rejected"
+                                                        ? "bg-danger"
+                                                        : item.visitor_status === "pending"
+                                                            ? "bg-warning text-dark"
+                                                            : "bg-secondary"
+                                                    }`}
+                                            >
+                                                {item.visitor_status}
+                                            </span>
+                                        </p>
+                                        <div>
+                                            <FaEye className="me-2 text-primary" role="button" />
+                                            <FaEdit className="me-2 text-warning" role="button" />
+                                            <FaTrash className="text-danger" role="button" />
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))
+                    ) : (
+                        <p className="text-center">No Data Found</p>
+                    )}
+                </Row>
+            )}
+            {/* Pagination */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+                <small>
+                    Showing 1 to {filteredVisitors.length} of {enquiryOlist.length} results
+                </small>
+                <Pagination>
+                    <Pagination.Prev />
+                    <Pagination.Item active>{1}</Pagination.Item>
+                    <Pagination.Item>{2}</Pagination.Item>
+                    <Pagination.Item>{3}</Pagination.Item>
+                    <Pagination.Next />
+                </Pagination>
             </div>
+            {/* Add Visitor Modal */}
+            <Modal show={show} onHide={handleClose} animation={false} size={"lg"}>
+                <Modal.Header closeButton></Modal.Header>
+                <Modal.Body>
+                    <CreateVisitors onSuccess={getAllenquiry} />
+                </Modal.Body>
+            </Modal>
+            {/* Edit Visitor Modal */}
+            <Modal show={showE} onHide={handleCloseE} animation={false} size={"lg"}>
+                <Modal.Header closeButton></Modal.Header>
+                <Modal.Body>
+                    <AddVisitors onSuccess={getAllenquiry} />
+                </Modal.Body>
+            </Modal>
         </main>
     )
 }

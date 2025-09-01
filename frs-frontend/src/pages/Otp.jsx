@@ -4,6 +4,7 @@ import { FiClock } from "react-icons/fi";
 import axios from "axios";
 
 function Otp({ phoneNumber, onVerify }) {
+  const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [timer, setTimer] = useState(30);
   const inputRefs = useRef([]); // store refs for all inputs
@@ -49,21 +50,37 @@ function Otp({ phoneNumber, onVerify }) {
     const enteredOtp = otp.join("");
     if (enteredOtp.length === 6) {
       // 🔹 Verify OTP API call
+      setLoading(true);
       axios.post(`${import.meta.env.VITE_API_URL}/auth/verify-otp `, { mobile_number: phoneNumber, otp: enteredOtp })
         .then((res) => {
-          if (res.data && res.data.token) {
-            onVerify(res.data.token); // pass token back to App
+          if (res.data && res.data.token && res.data.userType) {
+            setLoading(false);
+            onVerify(res.data.token, res.data.userType);  // 👇 Send both token & userType to App.js
           } else {
             alert(res.data.message || "Invalid OTP");
           }
         })
         .catch((err) => {
+          setLoading(false);
           console.error(err);
           alert("Something went wrong");
         });
     } else {
       alert("Enter 6-digit OTP");
     }
+  };
+  const handleResendOtp = () => {
+    setTimer(30);
+    axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, { mobile_number: phoneNumber })
+      .then((res) => {
+        if (!res.data.success) {
+          alert(res.data.message || "Failed to resend OTP");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to resend OTP");
+      });
   };
   return (
     <div className="otp-container">
@@ -97,10 +114,10 @@ function Otp({ phoneNumber, onVerify }) {
                 <FiClock /> Resend OTP in {timer}s
               </span>
             ) : (
-              <Button variant="link" className="p-0 text-decoration-none text-secondary" onClick={() => setTimer(30)} >Resend OTP</Button>
+              <Button variant="link" className="p-0 text-decoration-none text-secondary" onClick={handleResendOtp} >Resend OTP</Button>
             )}
           </div>
-          <Button type="submit" className="w-100 mt-3" variant="dark">Login</Button>
+          <Button type="submit" className="w-100 mt-3" variant="dark" disabled={loading}>{loading ? "Verifying..." : "Login"}</Button>
         </Form>
       </div>
     </div>

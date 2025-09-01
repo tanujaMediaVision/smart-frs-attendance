@@ -5,7 +5,7 @@ import axios from "axios";
 
 function Login({ onGetOtp }) {
     const [phone, setPhone] = useState("");
-
+    const [loading, setLoading] = useState(false);
     const handleSubmit = (e) => {
         e.preventDefault();
         const phoneRegex = /^[6-9]\d{9}$/;
@@ -15,16 +15,20 @@ function Login({ onGetOtp }) {
         }
         if (phone.length === 10) {
             // 🔹 Call API to send OTP
-            console.log("API URL:", import.meta.env.VITE_API_URL);
+            // console.log("API URL:", import.meta.env.VITE_API_URL);
             axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, { mobile_number: phone })
                 .then((res) => {
                     if (res.data) {
-                        onGetOtp(phone); // move to OTP page
+                        setLoading(true);
+                        const type = res.data.userType;
+                        onGetOtp(phone, type); // move to OTP page
                     } else {
+                        setLoading(false);
                         alert(res.data.message || "Failed to send OTP");
                     }
                 })
                 .catch((err) => {
+                    setLoading(false);
                     console.error(err.response?.data || err.message);
                     alert(err.response?.data?.message || "Something went wrong");
                 });
@@ -52,11 +56,11 @@ function Login({ onGetOtp }) {
                                 placeholder="Enter phone number"
                                 value={phone}
                                 maxLength={10}
-                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                             />
                         </InputGroup>
                     </Form.Group>
-                    <Button variant="dark" type="submit" className="w-100 mt-3">Get OTP</Button>
+                    <Button variant="dark" type="submit" className="w-100 mt-3" disabled={loading}>{loading ? "Sending OTP..." : "Get OTP"}</Button>
                 </Form>
             </div>
         </div>

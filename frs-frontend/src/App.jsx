@@ -100,14 +100,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route
-            path="/visitor-form/:id"
+            path="/"
             element={
               <ProtectedRoute>
                 <AddVisitors />
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/visitor-form/:id" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     );

@@ -7,14 +7,15 @@ import CreateVisitors from "./CreateVisitors";
 const Visitors = () => {
     const [show, setShow] = useState(false);
     const [showE, setShowE] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
     const [view, setView] = useState("table"); // "table" | "card"
     const [enquiryOlist, setEnquiryOlist] = useState([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-    const handleCloseE = () => setShowE(false);
-    const handleShowE = () => setShowE(true);
+    const handleCloseE = () => { setShowE(false); setSelectedId(null); }
+    const handleShowE = (id) => { setShowE(true); setSelectedId(id); }
 
     const getAllenquiry = () => {
         axios
@@ -135,9 +136,9 @@ const Visitors = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{item.purpose_of_visit || "—"}</td>
-                                    <td>{item.createdAt
-                                        ? new Date(item.createdAt).toLocaleString("en-US", {
+                                    <td>{item.latestAppointment?.purpose_of_visit || "—"}</td>
+                                    <td>{item.created_at
+                                        ? new Date(item.created_at).toLocaleString("en-US", {
                                             month: "numeric",
                                             day: "numeric",
                                             year: "numeric",
@@ -148,23 +149,23 @@ const Visitors = () => {
                                         : "—"}</td>
                                     <td>
                                         <span
-                                            className={`badge ${item.visitor_status === "approved"
+                                            className={`badge ${item.latestAppointment?.appointment_status === "approved"
                                                 ? "bg-success"
-                                                : item.visitor_status === "rejected"
+                                                : item.latestAppointment?.appointment_status === "rejected"
                                                     ? "bg-danger"
-                                                    : item.visitor_status === "pending"
+                                                    : item.latestAppointment?.appointment_status === "pending"
                                                         ? "bg-warning text-dark"
                                                         : "bg-secondary"
                                                 }`}
                                         >
-                                            {item.visitor_status
-                                                ? item.visitor_status.charAt(0).toUpperCase() + item.visitor_status.slice(1)
+                                            {item.latestAppointment?.appointment_status
+                                                ? item.latestAppointment?.appointment_status.charAt(0).toUpperCase() + item.latestAppointment?.appointment_status.slice(1)
                                                 : ""}
                                         </span>
                                     </td>
                                     <td>
                                         <FaEye className="me-2 text-primary" role="button" />
-                                        <FaEdit className="me-2 text-warning" role="button" onClick={handleShowE} />
+                                        <FaEdit className="me-2 text-warning" role="button" onClick={() => handleShowE(item._id)} />
                                         <FaTrash className="text-danger" role="button" />
                                     </td>
                                 </tr>
@@ -205,28 +206,39 @@ const Visitors = () => {
                                             </div>
                                         </div>
                                         <p className="mb-1">
-                                            <strong>Purpose:</strong> {item.purpose_of_visit || "—"}
+                                            <strong>Purpose:</strong> {item.latestAppointment?.purpose_of_visit || "—"}
                                         </p>
                                         <p className="mb-1">
-                                            <strong>Date:</strong> {new Date().toLocaleDateString()}
+                                            <strong>Date:</strong> {item.created_at
+                                                ? new Date(item.created_at).toLocaleString("en-US", {
+                                                    month: "numeric",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                    hour: "numeric",
+                                                    minute: "numeric",
+                                                    hour12: true
+                                                })
+                                                : "—"}
                                         </p>
                                         <p>
                                             <span
-                                                className={`badge ${item.visitor_status === "approved"
+                                                className={`badge ${item.latestAppointment?.appointment_status === "approved"
                                                     ? "bg-success"
-                                                    : item.visitor_status === "rejected"
+                                                    : item.latestAppointment?.appointment_status === "rejected"
                                                         ? "bg-danger"
-                                                        : item.visitor_status === "pending"
+                                                        : item.latestAppointment?.appointment_status === "pending"
                                                             ? "bg-warning text-dark"
                                                             : "bg-secondary"
                                                     }`}
                                             >
-                                                {item.visitor_status}
+                                                {item.latestAppointment?.appointment_status
+                                                    ? item.latestAppointment?.appointment_status.charAt(0).toUpperCase() + item.latestAppointment?.appointment_status.slice(1)
+                                                    : ""}
                                             </span>
                                         </p>
                                         <div>
                                             <FaEye className="me-2 text-primary" role="button" />
-                                            <FaEdit className="me-2 text-warning" role="button" />
+                                            <FaEdit className="me-2 text-warning" role="button" onClick={() => handleShowE(item._id)} />
                                             <FaTrash className="text-danger" role="button" />
                                         </div>
                                     </Card.Body>
@@ -239,7 +251,7 @@ const Visitors = () => {
                 </Row>
             )}
             {/* Pagination */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
+            {/* <div className="d-flex justify-content-between align-items-center mt-3">
                 <small>
                     Showing 1 to {filteredVisitors.length} of {enquiryOlist.length} results
                 </small>
@@ -250,19 +262,19 @@ const Visitors = () => {
                     <Pagination.Item>{3}</Pagination.Item>
                     <Pagination.Next />
                 </Pagination>
-            </div>
+            </div> */}
             {/* Add Visitor Modal */}
             <Modal show={show} onHide={handleClose} animation={false} size={"lg"}>
                 <Modal.Header closeButton></Modal.Header>
                 <Modal.Body>
-                    <CreateVisitors onSuccess={getAllenquiry} />
+                    <CreateVisitors onSuccess={() => { getAllenquiry(); handleClose(); }} />
                 </Modal.Body>
             </Modal>
             {/* Edit Visitor Modal */}
             <Modal show={showE} onHide={handleCloseE} animation={false} size={"lg"}>
                 <Modal.Header closeButton></Modal.Header>
                 <Modal.Body>
-                    <AddVisitors onSuccess={getAllenquiry} />
+                    <AddVisitors id={selectedId} onSuccess={() => { getAllenquiry(); handleCloseE(); }} />
                 </Modal.Body>
             </Modal>
         </main>

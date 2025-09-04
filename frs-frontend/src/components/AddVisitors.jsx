@@ -1,27 +1,62 @@
-import { useState } from "react";
-import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { Container, Row, Col, Form, Button, Card, Spinner } from "react-bootstrap";
 import { FaUser, FaIdCard, FaCar, FaShieldAlt, FaClipboardCheck, FaSignature, FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
-const AddVisitors = () => {
+const AddVisitors = ({ id, onSuccess }) => {
+    const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
+    const [fetchingdata, setFetchingdata] = useState({});
     const [isEmployee, setIsEmployee] = useState("No");
     const [vehicleUsage, setVehicleUsage] = useState("No");
     const [driverAccompanying, setDriverAccompanying] = useState("No");
     const [carryingItems, setCarryingItems] = useState("No");
     const [applianceFields, setApplianceFields] = useState([{ name: "", sr_no: "" }]);
+    const [agree, setAgree] = useState(false); // ✅ checkbox state
     const [formData, setFormData] = useState({
         visitor_name: "",
         phone_no: "",
         aadhaar_phone_no: "",
         email: "",
         purpose_of_visit: "",
-        start_time: "",
+        start_date: "",
         expiry_date: "",
         aadhar_Photo_ID: "12",
-        entry_time: new Date(),
-        exit_time: new Date(),
-        visitor_status: "pending",
         CPF_GPF_No_master: "",
     });
+    // Fetch visitor details when component mounts or id changes
+    useEffect(() => {
+        if (id) {
+            setFetching(true);
+            axios
+                .get(`${import.meta.env.VITE_API_URL}/visitors/${id}`)
+                .then((res) => {
+                    const data = res.data;
+                    setFetching(false)
+                    setFetchingdata(data)
+                    setFormData({
+                        visitor_name: data.visitor_name || "",
+                        phone_no: data.phone_no || "",
+                        aadhaar_phone_no: data.aadhaar_phone_no || "",
+                        email: data.email || "",
+                        purpose_of_visit: data.purpose_of_visit || "",
+                        start_date: data.start_date || "",
+                        expiry_date: data.expiry_date || "",
+                        aadhar_Photo_ID: data.aadhar_Photo_ID || "12",
+                        CPF_GPF_No_master: data.CPF_GPF_No_master || "",
+                    });
+                    setIsEmployee(data.is_Emp || "No");
+                    setVehicleUsage(data.vehicleUsage || "No");
+                    setDriverAccompanying(data.driverAccompanying || "No");
+                    setCarryingItems(data.carryingItems || "No");
+                    setApplianceFields(data.items && data.items.length > 0 ? data.items : [{ name: "", sr_no: "" }]);
+                })
+                .catch((err) => {
+                    setFetching(false)
+                    console.error(err);
+                    alert("Failed to fetch visitor details");
+                })
+        }
+    }, [id]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,35 +82,57 @@ const AddVisitors = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!agree) { // ✅ checkbox validation
+            alert("You must agree to the Terms & Conditions before submitting");
+            return;
+        }
+        setLoading(true);
         const payload = {
             ...formData,
             is_Emp: isEmployee,
-            vehicleUsage,
-            driverAccompanying,
-            carryingItems,
+            // vehicleUsage,
+            // driverAccompanying,
+            // carryingItems,
             items: applianceFields,
         };
-        axios.post(`${import.meta.env.VITE_API_URL}/visitors/create`, payload)
+        axios.put(`${import.meta.env.VITE_API_URL}/visitors/update/${id}`, payload)
             .then((res) => {
-                console.error(res);
+                setLoading(false)
+                console.log(res);
                 alert("Visitor added successfully!");
-                // if (onSuccess) onSuccess(); // refresh table after add
+                if (onSuccess) onSuccess(); // refresh table after add
             })
             .catch((err) => {
+                setLoading(false)
                 console.error(err);
                 alert(err.response?.data?.message || "Failed to add visitor");
             });
     };
+    if (fetching) {
+        return (
+            <div className="text-center p-5">
+                <Spinner animation="border" />
+                <p className="mt-2">Loading visitor details...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             <Container className="py-4">
                 <Form onSubmit={handleSubmit}>
-                    <h3>Visitor Registration</h3>
-                    <p className="text-muted">Please complete all required fields</p>
-                    {/* <small className="d-block text-end">
-                        <strong>Registration ID:</strong> VR-2025-001 <br />
-                        <strong>Date:</strong> January 20, 2025
-                    </small> */}
+                    <h3>Edit Visitor Registration</h3>
+                    <p className="text-muted">Update visitor details below</p>
+                    <small className="d-block text-end">
+                        <strong>Registration ID:</strong> 00 <br />
+                        <strong>Date:</strong> {fetchingdata.createdAt
+                            ? new Date(fetchingdata.createdAt).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            })
+                            : ""}
+                    </small>
                     {/* Basic Information */}
                     <Card className="my-3 p-3 shadow-sm">
                         <h5><FaUser /> Basic Information</h5>
@@ -92,12 +149,6 @@ const AddVisitors = () => {
                                     <Form.Control name="phone_no" maxLength={10} value={formData.phone_no} onChange={handleChange} type="text" placeholder="Enter phone number" required />
                                 </Form.Group>
                             </Col>
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Aadhar Phone Number *</Form.Label>
-                                    <Form.Control name="aadhaar_phone_no" maxLength={10} value={formData.aadhaar_phone_no} onChange={handleChange} type="text" placeholder="Enter phone number" required />
-                                </Form.Group>
-                            </Col>
                         </Row>
                         <Row className="mb-3">
                             <Col md={6}>
@@ -110,10 +161,13 @@ const AddVisitors = () => {
                                 <Form.Group>
                                     <Form.Label>Purpose of Visit *</Form.Label>
                                     <Form.Select name="purpose_of_visit" value={formData.purpose_of_visit} onChange={handleChange} required>
-                                        <option disabled>Select Purpose</option>
-                                        <option value="meeting">Meeting</option>
-                                        <option value="delivery">Delivery</option>
-                                        <option value="interview">Interview</option>
+                                        <option value="" disabled>Select Purpose</option>
+                                        <option value="Meeting with Employee">Meeting with Employee</option>
+                                        <option value="Interview/Recruitment">Interview/Recruitment</option>
+                                        <option value="Client Meeting">Client Meeting</option>
+                                        <option value="Business Discussion">Business Discussion</option>
+                                        <option value="Service Work">Service Work</option>
+                                        <option value="Official Inspection">Official Inspection</option>
                                     </Form.Select>
                                 </Form.Group>
                             </Col>
@@ -122,18 +176,26 @@ const AddVisitors = () => {
                             <Col md={6}>
                                 <Form.Group>
                                     <Form.Label>Visit Start Time *</Form.Label>
-                                    <Form.Control type="datetime-local" name="start_time" value={formData.start_time} onChange={handleChange} required />
+                                    <Form.Control type="datetime-local" name="start_date" value={
+                                        formData.start_date
+                                            ? new Date(formData.start_date).toISOString().slice(0, 16)
+                                            : ""
+                                    } onChange={handleChange} required />
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
                                     <Form.Label>Visit End Time *</Form.Label>
-                                    <Form.Control type="datetime-local" name="expiry_date" value={formData.expiry_date} onChange={handleChange} required />
+                                    <Form.Control type="datetime-local" name="expiry_date" value={
+                                        formData.expiry_date
+                                            ? new Date(formData.expiry_date).toISOString().slice(0, 16)
+                                            : ""
+                                    } onChange={handleChange} required />
                                 </Form.Group>
                             </Col>
                         </Row>
                         <Row className="mb-3">
-                            <Col md={8}>
+                            <Col md={6}>
                                 <Form.Group>
                                     <Form.Label>Host Name / Department *</Form.Label>
                                     <Form.Control name="CPF_GPF_No_master" value={formData.CPF_GPF_No_master} onChange={handleChange} type="text" placeholder="Enter Host / Department" required />
@@ -171,16 +233,22 @@ const AddVisitors = () => {
                             <>
                                 <h6>Internal Visitor Information</h6>
                                 <Row className="mb-3">
-                                    <Col md={6}>
+                                    <Col md={4}>
                                         <Form.Group>
                                             <Form.Label>Employee ID *</Form.Label>
                                             <Form.Control placeholder="Enter Emp ID" />
                                         </Form.Group>
                                     </Col>
-                                    <Col md={6}>
+                                    <Col md={4}>
                                         <Form.Group>
                                             <Form.Label>Employee Name *</Form.Label>
                                             <Form.Control placeholder="Enter Emp Name" />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={4}>
+                                        <Form.Group>
+                                            <Form.Label>Aadhar Phone Number *</Form.Label>
+                                            <Form.Control name="aadhaar_phone_no" maxLength={10} value={formData.aadhaar_phone_no} onChange={handleChange} type="text" placeholder="Enter phone number" required />
                                         </Form.Group>
                                     </Col>
                                 </Row>
@@ -216,15 +284,25 @@ const AddVisitors = () => {
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group>
+                                            <Form.Label>Aadhar Phone Number *</Form.Label>
+                                            <Form.Control name="aadhaar_phone_no" maxLength={10} value={formData.aadhaar_phone_no} onChange={handleChange} type="text" placeholder="Enter phone number" required />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                                <Row className="mb-3">
+                                    <Col md={6}>
+                                        <Form.Group>
                                             <Form.Label>Upload ID Proof *</Form.Label>
                                             <Form.Control type="file" />
                                         </Form.Group>
                                     </Col>
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label>Upload Live Selfie *</Form.Label>
+                                            <Form.Control type="file" />
+                                        </Form.Group>
+                                    </Col>
                                 </Row>
-                                <Form.Group>
-                                    <Form.Label>Upload Live Selfie *</Form.Label>
-                                    <Form.Control type="file" />
-                                </Form.Group>
                             </>
                         )}
                     </Card>
@@ -272,13 +350,13 @@ const AddVisitors = () => {
                         {carryingItems === "Yes" && (
                             <>
                                 {applianceFields.map((field, index) => (
-                                    <Row key={index} className="mb-2 align-items-center">
-                                        <Col md={5}>
+                                    <Row key={index} className="mb-2 align-items-end">
+                                        <Col md={10}>
                                             <Form.Control placeholder="Enter appliance type" value={field.name} onChange={(e) => handleItemChange(index, "name", e.target.value)} />
                                         </Col>
-                                        <Col md={5}>
+                                        {/* <Col md={5}>
                                             <Form.Control type="file" onChange={(e) => handleItemChange(index, "file", e.target.files?.[0] || null)} />
-                                        </Col>
+                                        </Col> */}
                                         <Col md={2}>
                                             {applianceFields.length > 1 && (
                                                 <Button variant="danger" size="sm" onClick={() => handleRemoveField(index)} ><FaTrash /></Button>
@@ -288,7 +366,7 @@ const AddVisitors = () => {
                                 ))}
                                 {applianceFields.length < 10 && (
                                     <Row>
-                                        <Col className="text-end">
+                                        <Col className="text-start">
                                             <Button variant="success" size="sm" onClick={handleAddField}><FaPlus /> Add</Button>
                                         </Col>
                                     </Row>
@@ -296,11 +374,11 @@ const AddVisitors = () => {
                             </>
                         )}
                     </Card>
-                    <Form.Check type="checkbox" label={<span className="fs-6">I acknowledge that I have read and agree to the Terms & Conditions and all information provided is accurate</span>} />
+                    <Form.Check type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} label={<span className="fs-6">I acknowledge that I have read and agree to the Terms & Conditions and all information provided is accurate</span>} />
                     {/* Submit */}
                     <div className="text-center">
-                        <Button type="submit" variant="dark" >
-                            Submit Registration
+                        <Button type="submit" variant="dark" disabled={loading || !agree}>
+                            {loading ? <Spinner animation="border" size="sm" /> : "Update Visitor"}
                         </Button>
                         <p className="text-muted mt-2">Please review all information before submitting</p>
                     </div>
